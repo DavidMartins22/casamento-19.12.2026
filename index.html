@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Permite que o site se adapte a celulares -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Save the Date | David & Luísa</title>
+
+    <!-- Importação do arquivo de estilos -->
+    <link rel="stylesheet" href="src/css/estilo.css">
+</head>
+<body>
+
+    <!-- Cabeçalho e menu de navegação -->
+    <header class="cabecalho">
+        <a href="#inicio" class="logo">D & L</a>
+
+        <nav>
+            <a href="#historia">Nossa história</a>
+            <a href="#fotos">Fotos</a>
+            <a href="#casamento">O casamento</a>
+            <a href="#presenca">Confirmar presença</a>
+        </nav>
+    </header>
+
+    <!-- Seção inicial com os nomes dos noivos -->
+    <section class="inicio" id="inicio">
+        <div class="inicio-conteudo">
+            <p class="subtitulo">SAVE THE DATE</p>
+
+            <h1>David <span>&</span> Luísa</h1>
+
+            <p class="data">19 . 12 . 2026</p>
+
+            <p class="frase">
+                Dois corações, uma história e um amor para toda a vida.
+            </p>
+
+            <a href="#casamento" class="botao">Conheça os detalhes</a>
+        </div>
+    </section>
+
+    <!-- Mensagem sobre a história dos noivos -->
+    <section class="historia" id="historia">
+        <p class="subtitulo">NOSSA HISTÓRIA</p>
+
+        <h2>O amor nos trouxe até aqui</h2>
+
+        <p class="texto-historia">
+            Existem encontros que mudam nossas vidas para sempre.
+            O nosso foi assim: uma história construída com amor,
+            companheirismo, sonhos e a vontade de caminhar juntos.
+
+            <br><br>
+
+            Agora, estamos prestes a começar um novo capítulo.
+            E queremos compartilhar esse momento tão especial
+            com as pessoas que fazem parte da nossa história.
+        </p>
+
+        <p class="assinatura">Com amor, David & Luísa</p>
+    </section>
+
+    <!-- Galeria de fotos dos noivos -->
+    <section class="fotos" id="fotos">
+        <p class="subtitulo">NOSSOS MOMENTOS</p>
+
+        <h2>Uma história em fotografias</h2>
+
+        <div class="galeria">
+
+            <!--
+                Para trocar uma foto, substitua o endereço do atributo src.
+                Para adicionar outra foto, copie um bloco inteiro de figure.
+            -->
+
+            <figure>
+                <img
+                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80"
+                    alt="Casal em um momento especial"
+                >
+            </figure>
+
+            <figure>
+                <img
+                    src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=900&q=80"
+                    alt="Momento de celebração de um casamento"
+                >
+            </figure>
+
+            <figure>
+                <img
+                    src="https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=900&q=80"
+                    alt="Casal celebrando o amor"
+                >
+            </figure>
+
+            <figure>
+                <img
+                    src="https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80"
+                    alt="Detalhes de uma cerimônia de casamento"
+                >
+            </figure>
+
+        </div>
+    </section>
+
+    <!-- Informações sobre o casamento -->
+    <section class="casamento" id="casamento">
+        <p class="subtitulo">NOSSO GRANDE DIA</p>
+
+        <h2>O início de uma nova história</h2>
+
+        <p class="data-casamento">19 de dezembro de 2026</p>
+
+        <div class="detalhes">
+
+            <div class="detalhe">
+                <span>DATA</span>
+                <h3>19/12/2026</h3>
+                <p>Domingo</p>
+            </div>
+
+            <div class="detalhe">
+                <span>HORÁRIO</span>
+                <h3>A definir</h3>
+                <p>Em breve mais informações</p>
+            </div>
+
+            <div class="detalhe">
+                <span>LOCAL</span>
+                <h3>A definir</h3>
+                <p>Em breve divulgaremos o endereço</p>
+            </div>
+
+        </div>
+
+        <p class="mensagem-final">
+            "O amor é paciente, o amor é bondoso."
+            <br>
+            <span>1 Coríntios 13:4</span>
+        </p>
+    </section>
+
+    <!-- Formulário de confirmação de presença -->
+    <section class="presenca" id="presenca">
+        <p class="subtitulo">VOCÊ FAZ PARTE DA NOSSA HISTÓRIA</p>
+
+        <h2>Confirme sua presença</h2>
+
+        <p>
+            Será uma alegria compartilhar esse dia com você!
+            Preencha os dados abaixo para confirmar sua presença.
+        </p>
+
+        <form id="form-presenca">
+
+            <!-- Campo para o nome do convidado -->
+            <label for="nome">Nome completo</label>
+            <input
+                type="text"
+                id="nome"
+                placeholder="Digite seu nome"
+                required
+            >
+
+            <!-- Campo para o telefone do convidado -->
+            <label for="telefone">Telefone</label>
+            <input
+                type="tel"
+                id="telefone"
+                placeholder="(11) 99999-9999"
+                required
+            >
+
+            <!-- Confirmação de presença -->
+            <label for="presenca">Você estará presente?</label>
+            <select id="presenca" required>
+                <option value="">Selecione uma opção</option>
+                <option value="Sim">Sim, estarei presente!</option>
+                <option value="Não">Infelizmente não poderei ir</option>
+            </select>
+
+            <!-- Botão para enviar o formulário -->
+            <button type="submit" class="botao">
+                Confirmar presença
+            </button>
+
+        </form>
+
+        <!-- Mensagem exibida após o envio -->
+        <p id="mensagem-form"></p>
+    </section>
+
+    <!-- Área de administração da lista de convidados -->
+    <section class="administracao">
+        <h2>Lista de convidados</h2>
+
+        <p>
+            Área para consultar os registros feitos neste navegador.
+        </p>
+
+        <button id="mostrar-lista" class="botao botao-secundario">
+            Mostrar convidados
+        </button>
+
+        <!-- Local onde os convidados serão exibidos -->
+        <div id="lista-convidados" class="lista-convidados"></div>
+    </section>
+
+    <!-- Rodapé -->
+    <footer>
+        <p>Com amor, David & Luísa</p>
+        <p>19.12.2026</p>
+    </footer>
+
+    <!-- Importação do JavaScript -->
+    <script src="src/js/script.js"></script>
+
+</body>
+</html>
