@@ -6,166 +6,154 @@
 const SUPABASE_URL = "https://rirhllndepjbnflxfaob.supabase.co";
 const SUPABASE_KEY = "sb_publishable_6yAUyWpsKyCNJKbVbyOWVw_TZuS3eXv";
 
-// Cria a conexão com o Supabase
+// Certifique-se de que esta linha está exatamente com este nome:
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =========================================
-// CONTAGEM REGRESSIVA
+// CONFIRMAÇÃO DE PRESENÇA (Passo 1 Integrado)
 // =========================================
-
-// Data do casamento: 19 de dezembro de 2026
-const dataCasamento = new Date("2026-12-19T00:00:00");
-
-// Seleciona o espaço onde ficará a contagem
-const inicioConteudo = document.querySelector(".inicio-conteudo");
-
-if (inicioConteudo) {
-  const contador = document.createElement("p");
-  contador.classList.add("contador");
-  inicioConteudo.appendChild(contador);
-
-  // Atualiza a contagem regressiva
-  function atualizarContagem() {
-    const agora = new Date();
-    const diferenca = dataCasamento - agora;
-
-    if (diferenca <= 0) {
-      contador.textContent = "O nosso grande dia chegou!";
-      return;
-    }
-
-    const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
-
-    contador.textContent = `Faltam ${dias} dias para o nosso casamento!`;
-  }
-
-  atualizarContagem();
-}
-
-// =========================================
-// CONFIRMAÇÃO DE PRESENÇA
-// =========================================
-
-// Seleciona os elementos do formulário
 const formulario = document.getElementById("form-presenca");
 const mensagemForm = document.getElementById("mensagem-form");
 
-// Quando o formulário for enviado
 if (formulario && mensagemForm) {
   formulario.addEventListener("submit", async function (evento) {
-    // Impede o recarregamento da página
     evento.preventDefault();
 
-    // Obtém os dados preenchidos pelo convidado
     const nome = document.getElementById("nome").value.trim();
     const telefone = document.getElementById("telefone").value.trim();
-    const presenca = document.getElementById("presenca").value;
+    const campoSelect = document.getElementById("confirmacao");
+    const presenca = campoSelect ? campoSelect.value : "";
 
-    // Verifica se os campos estão preenchidos
     if (!nome || !telefone || !presenca) {
-      mensagemForm.textContent = "Preencha todos os campos.";
+      mensagemForm.textContent = "Por favor, preencha todos os campos.";
       return;
     }
 
-    // Informa que o cadastro está sendo enviado
     mensagemForm.textContent = "Enviando sua confirmação...";
 
-    // Envia os dados para a tabela convidados
-    const { error } = await supabaseClient.from("convidados").insert([
-      {
-        nome: nome,
-        telefone: telefone,
-        presenca: presenca,
-      },
-    ]);
+    try {
+      const dadosConvidado = { nome, telefone, presenca };
 
-    // Verifica se ocorreu algum erro
-    if (error) {
-      console.error("Erro ao salvar convidado:", error);
+      const { error } = await supabaseClient.from("convidados").insert([dadosConvidado]);
 
-      mensagemForm.textContent =
-        "Não foi possível registrar sua presença. Tente novamente.";
+      if (error) {
+        console.error("Erro ao salvar convidado:", error);
+        mensagemForm.textContent = "Não foi possível registrar sua presença. Tente novamente.";
+        return;
+      }
 
-      return;
+      mensagemForm.textContent = "Sua confirmação foi registrada com sucesso! ❤️";
+      formulario.reset();
+
+      // === PASSO 1: Dispara o WhatsApp automaticamente após o sucesso ===
+      setTimeout(() => {
+        enviarWhatsApp(dadosConvidado);
+      }, 1000);
+
+    } catch (erro) {
+      console.error("Erro na comunicação com o Supabase:", erro);
+      mensagemForm.textContent = "Ocorreu um erro na comunicação. Tente novamente.";
     }
-
-    // Mostra a mensagem de sucesso
-    mensagemForm.textContent = "Sua confirmação foi registrada com sucesso! ❤️";
-
-    // Limpa o formulário
-    formulario.reset();
   });
 }
 
 // =========================================
-// LISTA DE CONVIDADOS
+// LISTA DE CONVIDADOS (Passo 2 Realtime + Segurança)
 // =========================================
-
-// Seleciona os elementos da lista
 const botaoLista = document.getElementById("mostrar-lista");
 const listaConvidados = document.getElementById("lista-convidados");
 
-// Esconde a lista inicialmente
 if (botaoLista && listaConvidados) {
   listaConvidados.style.display = "none";
 
-  // Mostra ou esconde a lista de convidados
-  botaoLista.addEventListener("click", function () {
+  botaoLista.addEventListener("click", async function () {
     if (listaConvidados.style.display === "block") {
       listaConvidados.style.display = "none";
       botaoLista.textContent = "Mostrar convidados";
     } else {
+      // Defina uma senha simples para evitar que qualquer convidado curioso veja a lista completa
+      const senhaAdmin = "casamento@2026"; // 💡 Altere aqui para a senha que você preferir!
+      const senhaDigitada = prompt("Digite a senha de administrador para visualizar a lista:");
+
+      if (senhaDigitada !== senhaAdmin) {
+        alert("Senha incorreta!");
+        return;
+      }
+
       listaConvidados.style.display = "block";
       botaoLista.textContent = "Ocultar convidados";
+      listaConvidados.innerHTML = "<p>Carregando lista de convidados...</p>";
 
-      // A lista administrativa será implementada
-      // após configurarmos o acesso do administrador.
-      listaConvidados.textContent =
-        "A lista de convidados será disponibilizada na área administrativa.";
+      try {
+        // Busca os dados diretamente do Supabase ordenando por nome
+        const { data, error } = await supabaseClient
+          .from("convidados")
+          .select("nome, telefone, presenca")
+          .order("nome", { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          listaConvidados.innerHTML = "<p>Nenhum convidado registrado ainda.</p>";
+          return;
+        }
+
+        // Cria a estrutura visual da lista
+        let htmlLista = `
+          <div style="margin-top: 15px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; background: #fff; color: #333; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+              <thead>
+                <tr style="background-color: #f4f4f4; font-weight: bold;">
+                  <th style="padding: 12px 15px; border-bottom: 2px solid #ddd;">Nome</th>
+                  <th style="padding: 12px 15px; border-bottom: 2px solid #ddd;">Telefone</th>
+                  <th style="padding: 12px 15px; border-bottom: 2px solid #ddd;">Confirmou?</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        data.forEach(item => {
+          const corPresenca = item.presenca === "Sim" ? "green" : "red";
+          htmlLista += `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 10px 15px;">${item.nome}</td>
+              <td style="padding: 10px 15px;">${item.telefone}</td>
+              <td style="padding: 10px 15px; color: ${corPresenca}; font-weight: bold;">${item.presenca}</td>
+            </tr>
+          `;
+        });
+
+        htmlLista += `
+              </tbody>
+            </table>
+            <p style="margin-top: 10px; font-weight: bold; color: #fff;">Total de registros: ${data.length}</p>
+          </div>
+        `;
+
+        listaConvidados.innerHTML = htmlLista;
+
+      } catch (erro) {
+        console.error("Erro ao carregar lista:", erro);
+        listaConvidados.innerHTML = "<p>Erro ao carregar a lista. Certifique-se de que o RLS do Supabase permite a leitura (SELECT) pública.</p>";
+      }
     }
   });
 }
 
 // =========================================
-// WHATSAPP
+// FUNÇÃO DO WHATSAPP (Original mantida)
 // =========================================
-
-// Abre o WhatsApp com uma mensagem personalizada
 function enviarWhatsApp(convidado) {
-  // Remove caracteres que não sejam números
   const telefone = convidado.telefone.replace(/\D/g, "");
-
-  // Adiciona o código do Brasil, caso necessário
   const numero = telefone.startsWith("55") ? telefone : "55" + telefone;
-
-  // Define a mensagem conforme a confirmação
   let mensagem;
 
   if (convidado.presenca === "Sim") {
-    mensagem = `Olá, ${convidado.nome}! ❤️
-
-Ficamos muito felizes com sua confirmação!
-
-Estamos preparando tudo com muito carinho para esse dia tão especial.
-
-Esperamos você no nosso casamento, dia 19 de dezembro de 2026!
-
-Com carinho, David & Luísa.`;
+    mensagem = `Olá, ${convidado.nome}! ❤️ Ficamos muito felizes com sua confirmação! Estamos preparando tudo com muito carinho para esse dia tão especial. Esperamos você no nosso casamento, dia 19 de dezembro de 2026! Com carinho, David & Luísa.`;
   } else {
-    mensagem = `Olá, ${convidado.nome}! ❤️
-
-Muito obrigado por nos avisar!
-
-Sentiremos sua falta nesse dia tão especial, mas ficamos felizes por fazer parte da sua história.
-
-Desejamos tudo de melhor para você!
-
-Com carinho, David & Luísa.`;
+    mensagem = `Olá, ${convidado.nome}! ❤️ Muito obrigado por nos avisar! Sentiremos sua falta nesse dia tão especial, mas ficamos felizes por fazer parte da sua história. Desejamos tudo de melhor para você! Com carinho, David & Luísa.`;
   }
 
-  // Codifica a mensagem para utilizar na URL
   const mensagemCodificada = encodeURIComponent(mensagem);
-
-  // Abre o WhatsApp com a mensagem pronta
-  window.open(`https://wa.me/${numero}?text=${mensagemCodificada}`, "_blank");
+  window.open(`https://wa.me{numero}?text=${mensagemCodificada}`, "_blank");
 }
