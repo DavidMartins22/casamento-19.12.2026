@@ -1,35 +1,46 @@
+// =========================================
+// CONEXÃO COM O SUPABASE
+// =========================================
+
+// Dados do projeto Supabase
+const SUPABASE_URL = "https://rirhllndepjbnflxfaob.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6yAUyWpsKyCNJKbVbyOWVw_TZuS3eXv";
+
+// Cria a conexão com o Supabase
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =========================================
 // CONTAGEM REGRESSIVA
 // =========================================
 
-// Data do casamento: 27 de dezembro de 2026
-// Altere a data abaixo se o casamento mudar de dia.
-const dataCasamento = new Date("2026-12-27T00:00:00");
+// Data do casamento: 19 de dezembro de 2026
+const dataCasamento = new Date("2026-12-19T00:00:00");
 
-const contador = document.createElement("p");
-contador.classList.add("contador");
+// Seleciona o espaço onde ficará a contagem
+const inicioConteudo = document.querySelector(".inicio-conteudo");
 
-document.querySelector(".inicio-conteudo").appendChild(contador);
+if (inicioConteudo) {
+  const contador = document.createElement("p");
+  contador.classList.add("contador");
+  inicioConteudo.appendChild(contador);
 
-// Atualiza a contagem regressiva
-function atualizarContagem() {
+  // Atualiza a contagem regressiva
+  function atualizarContagem() {
     const agora = new Date();
     const diferenca = dataCasamento - agora;
 
     if (diferenca <= 0) {
-        contador.textContent = "O nosso grande dia chegou!";
-        return;
+      contador.textContent = "O nosso grande dia chegou!";
+      return;
     }
 
     const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
 
     contador.textContent = `Faltam ${dias} dias para o nosso casamento!`;
+  }
+
+  atualizarContagem();
 }
-
-// Executa a contagem regressiva
-atualizarContagem();
-
 
 // =========================================
 // CONFIRMAÇÃO DE PRESENÇA
@@ -39,18 +50,9 @@ atualizarContagem();
 const formulario = document.getElementById("form-presenca");
 const mensagemForm = document.getElementById("mensagem-form");
 
-// Recupera os convidados salvos no navegador.
-// Se não existir nenhum registro, começa com uma lista vazia.
-let convidados = JSON.parse(localStorage.getItem("convidados")) || [];
-
-// Salva a lista atualizada no navegador
-function salvarConvidados() {
-    localStorage.setItem("convidados", JSON.stringify(convidados));
-}
-
 // Quando o formulário for enviado
-formulario.addEventListener("submit", function(evento) {
-
+if (formulario && mensagemForm) {
+  formulario.addEventListener("submit", async function (evento) {
     // Impede o recarregamento da página
     evento.preventDefault();
 
@@ -59,139 +61,98 @@ formulario.addEventListener("submit", function(evento) {
     const telefone = document.getElementById("telefone").value.trim();
     const presenca = document.getElementById("presenca").value;
 
-    // Cria um objeto com os dados do convidado
-    const convidado = {
-        id: Date.now(),
+    // Verifica se os campos estão preenchidos
+    if (!nome || !telefone || !presenca) {
+      mensagemForm.textContent = "Preencha todos os campos.";
+      return;
+    }
+
+    // Informa que o cadastro está sendo enviado
+    mensagemForm.textContent = "Enviando sua confirmação...";
+
+    // Envia os dados para a tabela convidados
+    const { error } = await supabaseClient.from("convidados").insert([
+      {
         nome: nome,
         telefone: telefone,
-        presenca: presenca
-    };
+        presenca: presenca,
+      },
+    ]);
 
-    // Adiciona o convidado à lista
-    convidados.push(convidado);
+    // Verifica se ocorreu algum erro
+    if (error) {
+      console.error("Erro ao salvar convidado:", error);
 
-    // Salva os dados no navegador
-    salvarConvidados();
+      mensagemForm.textContent =
+        "Não foi possível registrar sua presença. Tente novamente.";
 
-    // Mostra uma mensagem de confirmação
-    mensagemForm.textContent = "Presença registrada com sucesso!";
+      return;
+    }
+
+    // Mostra a mensagem de sucesso
+    mensagemForm.textContent = "Sua confirmação foi registrada com sucesso! ❤️";
 
     // Limpa o formulário
     formulario.reset();
-
-    // Atualiza a lista de convidados
-    mostrarConvidados();
-});
-
+  });
+}
 
 // =========================================
 // LISTA DE CONVIDADOS
 // =========================================
 
+// Seleciona os elementos da lista
 const botaoLista = document.getElementById("mostrar-lista");
 const listaConvidados = document.getElementById("lista-convidados");
 
 // Esconde a lista inicialmente
-listaConvidados.style.display = "none";
+if (botaoLista && listaConvidados) {
+  listaConvidados.style.display = "none";
 
-// Mostra ou esconde a lista de convidados
-botaoLista.addEventListener("click", function() {
-
+  // Mostra ou esconde a lista de convidados
+  botaoLista.addEventListener("click", function () {
     if (listaConvidados.style.display === "block") {
-
-        listaConvidados.style.display = "none";
-        botaoLista.textContent = "Mostrar convidados";
-
+      listaConvidados.style.display = "none";
+      botaoLista.textContent = "Mostrar convidados";
     } else {
+      listaConvidados.style.display = "block";
+      botaoLista.textContent = "Ocultar convidados";
 
-        listaConvidados.style.display = "block";
-        botaoLista.textContent = "Ocultar convidados";
-
-        mostrarConvidados();
+      // A lista administrativa será implementada
+      // após configurarmos o acesso do administrador.
+      listaConvidados.textContent =
+        "A lista de convidados será disponibilizada na área administrativa.";
     }
-
-});
-
+  });
+}
 
 // =========================================
-// EXIBIR CONVIDADOS
+// WHATSAPP
 // =========================================
 
-// Exibe todos os convidados registrados
-function mostrarConvidados() {
+// Abre o WhatsApp com uma mensagem personalizada
+function enviarWhatsApp(convidado) {
+  // Remove caracteres que não sejam números
+  const telefone = convidado.telefone.replace(/\D/g, "");
 
-    // Limpa a lista antes de atualizar
-    listaConvidados.innerHTML = "";
+  // Adiciona o código do Brasil, caso necessário
+  const numero = telefone.startsWith("55") ? telefone : "55" + telefone;
 
-    // Verifica se existem convidados registrados
-    if (convidados.length === 0) {
-        listaConvidados.textContent = "Nenhum convidado registrado.";
-        return;
-    }
+  // Define a mensagem conforme a confirmação
+  let mensagem;
 
-    // Percorre todos os convidados
-    convidados.forEach(function(convidado) {
-
-        // Cria o bloco de cada convidado
-        const bloco = document.createElement("div");
-        bloco.classList.add("convidado");
-
-        // Cria a área de informações do convidado
-        const informacoes = document.createElement("div");
-
-        const nome = document.createElement("p");
-        nome.textContent = `Nome: ${convidado.nome}`;
-
-        const telefone = document.createElement("p");
-        telefone.textContent = `Telefone: ${convidado.telefone}`;
-
-        const presenca = document.createElement("p");
-        presenca.textContent = `Presença: ${convidado.presenca}`;
-
-        // Adiciona as informações ao bloco
-        informacoes.append(nome, telefone, presenca);
-
-
-        // =========================================
-        // BOTÃO DE ENVIO PELO WHATSAPP
-        // =========================================
-
-        const botaoWhatsApp = document.createElement("button");
-
-        botaoWhatsApp.textContent = "Enviar confirmação pelo WhatsApp";
-        botaoWhatsApp.classList.add("botao-excluir");
-
-        // Ao clicar, abre o WhatsApp com uma mensagem personalizada
-        botaoWhatsApp.addEventListener("click", function() {
-
-            // Remove caracteres que não sejam números do telefone
-            const telefone = convidado.telefone.replace(/\D/g, "");
-
-            // Verifica se o telefone possui DDD e adiciona o código do Brasil
-            const numero = telefone.startsWith("55")
-                ? telefone
-                : "55" + telefone;
-
-            // Verifica qual mensagem será enviada
-            let mensagem;
-
-            if (convidado.presenca === "Sim") {
-
-                // Mensagem para quem confirmou presença
-                mensagem = `Olá, ${convidado.nome}! ❤️
+  if (convidado.presenca === "Sim") {
+    mensagem = `Olá, ${convidado.nome}! ❤️
 
 Ficamos muito felizes com sua confirmação!
 
 Estamos preparando tudo com muito carinho para esse dia tão especial.
 
-Esperamos você no nosso casamento, dia 27 de dezembro de 2026!
+Esperamos você no nosso casamento, dia 19 de dezembro de 2026!
 
 Com carinho, David & Luísa.`;
-
-            } else {
-
-                // Mensagem para quem não poderá comparecer
-                mensagem = `Olá, ${convidado.nome}! ❤️
+  } else {
+    mensagem = `Olá, ${convidado.nome}! ❤️
 
 Muito obrigado por nos avisar!
 
@@ -200,64 +161,11 @@ Sentiremos sua falta nesse dia tão especial, mas ficamos felizes por fazer part
 Desejamos tudo de melhor para você!
 
 Com carinho, David & Luísa.`;
+  }
 
-            }
+  // Codifica a mensagem para utilizar na URL
+  const mensagemCodificada = encodeURIComponent(mensagem);
 
-            // Codifica a mensagem para utilizar na URL
-            const mensagemCodificada = encodeURIComponent(mensagem);
-
-            // Monta o endereço do WhatsApp
-            const linkWhatsApp = `https://wa.me/${numero}?text=${mensagemCodificada}`;
-
-            // Abre o WhatsApp em uma nova aba
-            window.open(linkWhatsApp, "_blank");
-
-        });
-
-
-        // =========================================
-        // BOTÃO PARA EXCLUIR CONVIDADO
-        // =========================================
-
-        const botaoExcluir = document.createElement("button");
-
-        botaoExcluir.textContent = "Excluir";
-        botaoExcluir.classList.add("botao-excluir");
-
-        // Evento para excluir o convidado
-        botaoExcluir.addEventListener("click", function() {
-            excluirConvidado(convidado.id);
-        });
-
-
-        // =========================================
-        // ADICIONAR ELEMENTOS À LISTA
-        // =========================================
-
-        bloco.append(informacoes, botaoWhatsApp, botaoExcluir);
-
-        listaConvidados.appendChild(bloco);
-
-    });
-
-}
-
-
-// =========================================
-// EXCLUIR CONVIDADO
-// =========================================
-
-// Exclui um convidado pelo identificador
-function excluirConvidado(id) {
-
-    // Mantém somente os convidados com IDs diferentes
-    convidados = convidados.filter(function(convidado) {
-        return convidado.id !== id;
-    });
-
-    // Atualiza os dados salvos
-    salvarConvidados();
-
-    // Atualiza a lista exibida
-    mostrarConvidados();
+  // Abre o WhatsApp com a mensagem pronta
+  window.open(`https://wa.me/${numero}?text=${mensagemCodificada}`, "_blank");
 }
