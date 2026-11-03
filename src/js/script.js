@@ -12,9 +12,9 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // =========================================
 // CONFIGURAÇÃO DA Z-API (ENVIO AUTOMÁTICO)
 // =========================================
-// SUBSTITUA O TEXTO ENTRE ASPAS COM OS SEUS DADOS DO PAINEL DA Z-API:
 const Z_API_URL = "https://api.z-api.io/instances/3FB9E64497D87155337C0E222DF99AA0/token/CE22EB85E00F483D4F195923/send-text"; 
-const Z_API_CLIENT_TOKEN = "F846db06f883a4590860b85a021caced2S"; // Fica na aba "Segurança" do painel
+const Z_API_CLIENT_TOKEN = "F846db06f883a4590860b85a021caced2S"; // Token de segurança
+
 
 // =========================================
 // CONTAGEM REGRESSIVA
