@@ -155,5 +155,5 @@ function enviarWhatsApp(convidado) {
   }
 
   const mensagemCodificada = encodeURIComponent(mensagem);
-  window.open(`https://wa.me${numero}?text=${mensagemCodificada}`, "_blank");
+  window.open(`https://wa.me/${numero}?text=${mensagemCodificada}`, "_blank");
 }
